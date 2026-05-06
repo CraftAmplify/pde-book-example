@@ -2,27 +2,32 @@
   "tasks": [
     {
       "id": "1",
-      "text": "Set up my AI-powered coding environment (Cursor, Git, Node.js)",
+      "text": "Set up AI-powered coding environment (AI assistant, Git, Node.js)",
       "completed": true
     },
     {
       "id": "2",
-      "text": "Practice basic terminal commands (cd, ls, mkdir)",
+      "text": "Clone the example repository and install dependencies",
       "completed": true
     },
     {
       "id": "3",
-      "text": "Prompt Cursor to generate a basic HTML structure",
-      "completed": false
+      "text": "Run app locally with the mock API and development server",
+      "completed": true
     },
     {
       "id": "4",
-      "text": "Use AI to apply design system styles to a UI component",
+      "text": "Run baseline tests before making changes",
       "completed": false
     },
     {
       "id": "5",
-      "text": "Understand how to make a small UI fix in a mock codebase",
+      "text": "Make a small visual update with help from an AI assistant",
+      "completed": false
+    },
+    {
+      "id": "6",
+      "text": "Build and commit a functional update",
       "completed": false
     }
   ]

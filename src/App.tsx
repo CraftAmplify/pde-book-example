@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AddTaskForm } from '@/components/AddTaskForm'
 import { TaskItem } from '@/components/TaskItem'
 import { TaskService, TaskServiceError, type Task } from '@/services/taskService'
@@ -27,16 +27,30 @@ function App() {
   const [deletingTasks, setDeletingTasks] = useState<Set<string>>(new Set())
   const [movingTasks, setMovingTasks] = useState<Set<string>>(new Set())
 
-  // Fetch tasks on component mount
-  useEffect(() => {
-    fetchTasks()
-  }, [])
+  const setFriendlyError = (err: unknown, fallbackMessage: string) => {
+    if (err instanceof TaskServiceError) {
+      setError(err.message)
+    } else {
+      setError(fallbackMessage)
+    }
+  }
+
+  const closeOpenSwipe = () => {
+    if (!openElementRef?.current) return
+
+    openElementRef.current.classList.remove('swiped')
+    const taskContent = openElementRef.current.querySelector('.task-content') as HTMLElement
+    if (taskContent) {
+      taskContent.style.transform = 'translateX(0)'
+    }
+    setOpenElementRef(null)
+  }
 
   /**
    * Fetches all tasks from the API using TaskService
    * Handles loading states and error conditions with user-friendly messages
    */
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -44,15 +58,16 @@ function App() {
       setTasks(tasks)
     } catch (err) {
       console.error('Error fetching tasks:', err)
-      if (err instanceof TaskServiceError) {
-        setError(err.message)
-      } else {
-        setError('An unexpected error occurred. Please try again.')
-      }
+      setFriendlyError(err, 'An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  // Fetch tasks on component mount
+  useEffect(() => {
+    fetchTasks()
+  }, [fetchTasks])
 
   /**
    * Handles adding a new task to the list
@@ -72,11 +87,7 @@ function App() {
       setTasks(prevTasks => [addedTask, ...prevTasks]) // Add to beginning like the HTML version
     } catch (err) {
       console.error('Error adding task:', err)
-      if (err instanceof TaskServiceError) {
-        setError(err.message)
-      } else {
-        setError('Failed to add task. Please try again.')
-      }
+      setFriendlyError(err, 'Failed to add task. Please try again.')
     }
   }
 
@@ -92,14 +103,7 @@ function App() {
       setError(null)
       
       // Close any open swipe-to-delete buttons first
-      if (openElementRef && openElementRef.current) {
-        openElementRef.current.classList.remove('swiped')
-        const taskContent = openElementRef.current.querySelector('.task-content') as HTMLElement
-        if (taskContent) {
-          taskContent.style.transform = 'translateX(0)'
-        }
-        setOpenElementRef(null)
-      }
+      closeOpenSwipe()
       
       // Check if the task will actually change position
       const currentTasks = [...tasks]
@@ -145,20 +149,32 @@ function App() {
         setMovingTasks(prev => new Set(prev).add(taskId))
         
         // Wait for animation to complete, then update and reorder
-        setTimeout(async () => {
-          await TaskService.updateTask(taskId, { completed: !completed })
+        setTimeout(() => {
+          void (async () => {
+            try {
+              await TaskService.updateTask(taskId, { completed: !completed })
 
-          // Update the task completion status and reorder
-          setTasks(newOrder)
+              // Update the task completion status and reorder
+              setTasks(newOrder)
           
-          // End the move animation after a brief delay to allow for re-render
-          setTimeout(() => {
-            setMovingTasks(prev => {
-              const newSet = new Set(prev)
-              newSet.delete(taskId)
-              return newSet
-            })
-          }, 50)
+              // End the move animation after a brief delay to allow for re-render
+              setTimeout(() => {
+                setMovingTasks(prev => {
+                  const newSet = new Set(prev)
+                  newSet.delete(taskId)
+                  return newSet
+                })
+              }, 50)
+            } catch (err) {
+              console.error('Error updating task:', err)
+              setFriendlyError(err, 'Failed to update task. Please try again.')
+              setMovingTasks(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(taskId)
+                return newSet
+              })
+            }
+          })()
         }, ANIMATION.MOVE_DURATION) // Animation duration for move-out
       } else {
         // No position change, just update the completion status
@@ -173,11 +189,7 @@ function App() {
       
     } catch (err) {
       console.error('Error updating task:', err)
-      if (err instanceof TaskServiceError) {
-        setError(err.message)
-      } else {
-        setError('Failed to update task. Please try again.')
-      }
+      setFriendlyError(err, 'Failed to update task. Please try again.')
       // Remove from moving state if there was an error
       setMovingTasks(prev => {
         const newSet = new Set(prev)
@@ -198,40 +210,41 @@ function App() {
       setError(null)
       
       // Close any open swipe-to-delete buttons first
-      if (openElementRef && openElementRef.current) {
-        openElementRef.current.classList.remove('swiped')
-        const taskContent = openElementRef.current.querySelector('.task-content') as HTMLElement
-        if (taskContent) {
-          taskContent.style.transform = 'translateX(0)'
-        }
-        setOpenElementRef(null)
-      }
+      closeOpenSwipe()
       
       // Start the deletion animation
       setDeletingTasks(prev => new Set(prev).add(taskId))
       
       // Wait for animation to complete
-      setTimeout(async () => {
-        await TaskService.deleteTask(taskId)
+      setTimeout(() => {
+        void (async () => {
+          try {
+            await TaskService.deleteTask(taskId)
 
-        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId))
-        setDeletingTasks(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(taskId)
-          return newSet
-        })
+            setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId))
+            setDeletingTasks(prev => {
+              const newSet = new Set(prev)
+              newSet.delete(taskId)
+              return newSet
+            })
         
-        // Clear the open element reference when a task is deleted
-        setOpenElementRef(null)
-              }, ANIMATION.DELETE_DURATION) // Match the CSS animation duration
+            // Clear the open element reference when a task is deleted
+            setOpenElementRef(null)
+          } catch (err) {
+            console.error('Error deleting task:', err)
+            setFriendlyError(err, 'Failed to delete task. Please try again.')
+            setDeletingTasks(prev => {
+              const newSet = new Set(prev)
+              newSet.delete(taskId)
+              return newSet
+            })
+          }
+        })()
+      }, ANIMATION.DELETE_DURATION) // Match the CSS animation duration
       
     } catch (err) {
       console.error('Error deleting task:', err)
-      if (err instanceof TaskServiceError) {
-        setError(err.message)
-      } else {
-        setError('Failed to delete task. Please try again.')
-      }
+      setFriendlyError(err, 'Failed to delete task. Please try again.')
       // Remove from deleting state if there was an error
       setDeletingTasks(prev => {
         const newSet = new Set(prev)

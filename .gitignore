@@ -101,14 +101,14 @@ jspm_packages/
 tmp/
 temp/
 
-# Cypress
-cypress/screenshots/
-cypress/videos/
-cypress/downloads/
+# Playwright
+test-results/
+playwright-report/
 
 # Database files
 *.sqlite
 *.sqlite3
+db.json
 
 # Misc
 =

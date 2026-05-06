@@ -1,4 +1,4 @@
-# CraftAmplify Task Management Application
+# pde-book-example
 
 A modern, responsive task management application built with React and TypeScript. This application demonstrates how to create a polished frontend environment with data persistence, perfect for understanding how UI components interact with a mock backend.
 
@@ -46,6 +46,19 @@ Check your Node version:
 node -v  # should be >= 20.19.0
 ```
 
+### Known Good Setup
+
+If you are following the exercises from *Product Design Engineering*, use these commands from the project root:
+
+```bash
+npm ci
+npm run mock:api
+npm run dev
+npm test
+```
+
+The app expects the mock API and frontend development server to run at the same time. Keep `npm run mock:api` running in one terminal tab, then run `npm run dev` in another.
+
 ### Installation
 
 1. **Clone the repository** (if applicable) or navigate to the project directory
@@ -68,7 +81,7 @@ node -v  # should be >= 20.19.0
 npm run mock:api
 ```
 
-Note: This starts a local mock API backed by `db.json`. It is for development and testing only; there is no real backend service.
+Note: This starts a local mock API backed by `db.json`. For this project, `npm run mock:api` resets `db.json` from `db-backup.json` when it starts, which keeps the app in a predictable state (and avoids confusing diffs).
 
 Restore mock data at any time:
 ```bash
@@ -76,7 +89,7 @@ npm run db:reset
 ```
 This resets `db.json` from `db-backup.json`.
 
-**Keep this terminal running** - the backend needs to stay active for the frontend to work properly.
+Keep this terminal running. The backend needs to stay active for the frontend to work properly.
 
 #### 2. Start the Frontend Application
 
@@ -118,7 +131,7 @@ Open your browser and navigate to:
 ## Project Structure
 
 ```
-craftamplify-task-app/
+pde-book-example/
 ├── src/
 │   ├── components/
 │   │   ├── AddTaskForm.tsx      # Task input form component
@@ -140,7 +153,7 @@ craftamplify-task-app/
 
 ## Testing
 
-This project includes comprehensive testing with both unit tests and end-to-end (E2E) tests.
+This project includes both unit tests and end-to-end (E2E) tests.
 
 ### Unit Tests (Jest & React Testing Library)
 
@@ -166,52 +179,46 @@ npm run test:coverage
 
 **Test files location:** `src/components/*.test.tsx`
 
-### End-to-End Tests (Cypress)
+### End-to-End Tests (Playwright)
 
 E2E tests simulate real user interactions by testing the complete application flow in a browser environment.
 
-**Prerequisites for E2E tests:**
-Before running Cypress tests, you **must** have both servers running:
-
-1. **Start JSON Server (mock API)** (in one terminal):
-   ```bash
-   npm run mock:api
-   ```
-
-2. **Start React App** (in another terminal):
-   ```bash
-   npm run dev
-   ```
+The Playwright configuration uses the same local app and mock API ports as normal development. If they are already running, Playwright can reuse them. If they are not running, Playwright can start them for you. The E2E command resets `db.json` before and after the test run so test-created tasks do not stick around.
 
 **Run E2E tests (recommended headless):**
 ```bash
-npm run cypress:run
-# or
 npm run e2e
 ```
 
 Optional (headed UI):
 ```bash
-npm run cypress:open
-# or
-npm run e2e:open
+npm run e2e:ui
 ```
 
 **What's tested:**
-- Complete user workflows (adding, completing, deleting tasks)
-- Application loading and data persistence
-- Form interactions and validation
-- Task reordering and animations
-- Cross-browser compatibility
-- Touch and mouse interactions
+- Adding a task and verifying the API request payload
+- Basic app loading and interaction in a real browser
 
-**Test files location:** `cypress/e2e/*.cy.ts`
+**Test files location:** `tests/e2e/*.spec.ts`
 
 ### Test Coverage
 
 **Current test status:**
-- **Unit Tests**: 8/8 passing ✅ (100%)
-- **E2E Tests**: 7-8/9 passing ✅ (78-89%)
+- Unit tests are expected to pass with `npm test`.
+- E2E tests are expected to pass with `npm run e2e`.
+
+### Chapter 7 Practice Scripts
+
+The book uses two scripts to create and reset a controlled failure:
+
+```bash
+npm run ch7:introduce-failure
+npm test
+npm run ch7:reset
+npm test
+```
+
+After `ch7:introduce-failure`, exactly one unit test should fail. After `ch7:reset`, the tests should pass again.
 
 ## Development
 
@@ -221,7 +228,11 @@ The application is built with modern development practices:
 - **TypeScript**: Full type checking for better code quality
 - **ESLint**: Code linting for consistent style
 - **PostCSS**: Advanced CSS processing with Autoprefixer
-- **Comprehensive Testing**: Unit tests (Jest) and E2E tests (Cypress)
+- **Comprehensive Testing**: Unit tests (Jest) and E2E tests (Playwright)
+
+## Maintainer Notes
+
+This repository is designed to stay stable for readers. When updating dependencies or tooling, use `npm ci`, `npm test`, and `npm run e2e` to confirm the baseline still works. If the book screenshots depend on the updated behavior, regenerate the exercise screenshots from the book repository after the repo update.
 
 ## Contributing
 

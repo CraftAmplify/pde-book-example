@@ -15,7 +15,7 @@ describe('AddTaskForm', () => {
     render(<AddTaskForm onAddTask={mockOnAddTask} />);
     
     // Check if input field is present
-    const inputField = screen.getByPlaceholderText('Add a new task...');
+    const inputField = screen.getByLabelText('Task');
     expect(inputField).toBeInTheDocument();
     
     // Check if button is present
@@ -33,7 +33,7 @@ describe('AddTaskForm', () => {
   test('button is enabled when input has text', () => {
     render(<AddTaskForm onAddTask={mockOnAddTask} />);
     
-    const inputField = screen.getByPlaceholderText('Add a new task...');
+    const inputField = screen.getByLabelText('Task');
     const addButton = screen.getByRole('button', { name: /add/i });
     
     // Initially disabled
@@ -49,7 +49,7 @@ describe('AddTaskForm', () => {
   test('calls onAddTask when form is submitted with valid input', () => {
     render(<AddTaskForm onAddTask={mockOnAddTask} />);
     
-    const inputField = screen.getByPlaceholderText('Add a new task...');
+    const inputField = screen.getByLabelText('Task');
     const addButton = screen.getByRole('button', { name: /add/i });
     
     // Type in the input field
@@ -66,7 +66,7 @@ describe('AddTaskForm', () => {
   test('calls onAddTask when Enter key is pressed', async () => {
     render(<AddTaskForm onAddTask={mockOnAddTask} />);
     
-    const inputField = screen.getByPlaceholderText('Add a new task...');
+    const inputField = screen.getByLabelText('Task');
     
     // Type in the input field and press Enter
     await userEvent.type(inputField, 'Task with Enter key{enter}');
@@ -79,7 +79,7 @@ describe('AddTaskForm', () => {
   test('clears input field after successful submission', () => {
     render(<AddTaskForm onAddTask={mockOnAddTask} />);
     
-    const inputField = screen.getByPlaceholderText('Add a new task...') as HTMLInputElement;
+    const inputField = screen.getByLabelText('Task') as HTMLInputElement;
     const addButton = screen.getByRole('button', { name: /add/i });
     
     // Type in the input field
@@ -96,7 +96,7 @@ describe('AddTaskForm', () => {
   test('does not call onAddTask when input is empty or only whitespace', () => {
     render(<AddTaskForm onAddTask={mockOnAddTask} />);
     
-    const inputField = screen.getByPlaceholderText('Add a new task...');
+    const inputField = screen.getByLabelText('Task');
     const addButton = screen.getByRole('button', { name: /add/i });
     
     // Try to submit with empty input
@@ -112,7 +112,7 @@ describe('AddTaskForm', () => {
   test('trims whitespace from input before calling onAddTask', () => {
     render(<AddTaskForm onAddTask={mockOnAddTask} />);
     
-    const inputField = screen.getByPlaceholderText('Add a new task...');
+    const inputField = screen.getByLabelText('Task');
     const addButton = screen.getByRole('button', { name: /add/i });
     
     // Type with leading and trailing whitespace
