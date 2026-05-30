@@ -70,6 +70,12 @@ The app expects the mock API and frontend development server to run at the same 
    
    `npm ci` is recommended because it installs **exactly** what's in `package-lock.json` for a consistent, reproducible setup (great for classrooms and CI).
 
+   **Install output you can ignore:** `npm fund` messages, and `deprecated` warnings for `inflight` or `glob` from test tooling. They look alarming but are common and do not block the exercises.
+
+   **Install output worth acting on:** `npm audit` reporting moderate or higher vulnerabilities, or Playwright asking you to run `npx playwright install` (a fresh `npm ci` in this template should install Chromium automatically via `postinstall`).
+
+   Use the Node version in `.nvmrc` (Node 20). Much newer Node versions (for example Node 26) can add extra deprecation warnings during tests even when everything still works.
+
 ### Running the Application
 
 #### 1. Start the Mock Backend (JSON Server)
