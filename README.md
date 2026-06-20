@@ -240,6 +240,8 @@ The application is built with modern development practices:
 
 This repository is designed to stay stable for readers. When updating dependencies or tooling, use `npm ci`, `npm test`, and `npm run e2e` to confirm the baseline still works. If the book screenshots depend on the updated behavior, regenerate the exercise screenshots from the book repository after the repo update.
 
+`package.json` includes temporary `overrides` for patched transitive dependencies (`js-yaml`, `@babel/core`, and `esbuild`) that Jest, ESLint, and Vite may not have picked up yet. With the overrides in place, `npm audit` will stay clean, so they can hide whether upstream has fixed the issue. During periodic maintenance, temporarily remove the `overrides` block, run `npm install`, and check `npm audit`. If the audit is clean without them, delete the overrides and reinstall. If warnings return, restore the overrides.
+
 ## Contributing
 
 This application is designed for learning and demonstration purposes. Feel free to experiment with the code and explore different features and implementations. 
