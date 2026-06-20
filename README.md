@@ -38,12 +38,12 @@ This project is designed to simulate a modern frontend development environment w
 
 ### Prerequisites
 
-- **Node.js** (v20.19.0 or higher) with npm
+- **Node.js** (v24.0.0 or higher) with npm
   - Optional: use `nvm` for Node.js version management (not required)
 
 Check your Node version:
 ```bash
-node -v  # should be >= 20.19.0
+node -v  # should be >= 24.0.0
 ```
 
 ### Known Good Setup
@@ -74,7 +74,7 @@ The app expects the mock API and frontend development server to run at the same 
 
    **Install output worth acting on:** `npm audit` reporting moderate or higher vulnerabilities, or Playwright asking you to run `npx playwright install` (a fresh `npm ci` in this template should install Chromium automatically via `postinstall`).
 
-   Use the Node version in `.nvmrc` (Node 20). Much newer Node versions (for example Node 26) can add extra deprecation warnings during tests even when everything still works.
+   Use the Node version in `.nvmrc` (Node 24). Newer Node versions should work, but if setup behaves unexpectedly, compare your local version against the project requirement first.
 
 ### Running the Application
 
