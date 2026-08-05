@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
+    '^@/constants$': '<rootDir>/__mocks__/constants.ts',
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
@@ -27,4 +28,4 @@ const config: Config = {
   coverageReporters: ['text', 'lcov', 'html'],
 };
 
-export default config; 
+export default config;

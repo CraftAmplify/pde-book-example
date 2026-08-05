@@ -6,24 +6,24 @@ import { ANIMATION, LOADING_MESSAGES } from '@/constants'
 
 /**
  * Main App Component
- * 
+ *
  * The root component that manages the task list application state and renders
  * the main UI including the header, task form, and task list.
- * 
+ *
  * Features:
  * - Task CRUD operations via TaskService
  * - Loading and error state management
  * - Task reordering (active tasks first, then completed)
  * - Smooth animations for task state changes
  * - Swipe-to-delete functionality coordination
- * 
+ *
  * @returns JSX element representing the complete task application
  */
 function App() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [openElementRef, setOpenElementRef] = useState<React.RefObject<HTMLDivElement | null> | null>(null)
+  const [openSwipeTaskId, setOpenSwipeTaskId] = useState<string | null>(null)
   const [deletingTasks, setDeletingTasks] = useState<Set<string>>(new Set())
   const [movingTasks, setMovingTasks] = useState<Set<string>>(new Set())
 
@@ -33,17 +33,6 @@ function App() {
     } else {
       setError(fallbackMessage)
     }
-  }
-
-  const closeOpenSwipe = () => {
-    if (!openElementRef?.current) return
-
-    openElementRef.current.classList.remove('swiped')
-    const taskContent = openElementRef.current.querySelector('.task-content') as HTMLElement
-    if (taskContent) {
-      taskContent.style.transform = 'translateX(0)'
-    }
-    setOpenElementRef(null)
   }
 
   /**
@@ -72,7 +61,7 @@ function App() {
   /**
    * Handles adding a new task to the list
    * Uses TaskService to create the task and updates local state
-   * 
+   *
    * @param taskText - The text content of the new task
    */
   const handleAddTask = async (taskText: string) => {
@@ -94,30 +83,30 @@ function App() {
   /**
    * Handles toggling a task's completion status
    * Includes smart reordering logic and smooth animations when tasks change position
-   * 
+   *
    * @param taskId - The ID of the task to toggle
    * @param completed - The current completion status of the task
    */
   const handleToggleTask = async (taskId: string, completed: boolean) => {
     try {
       setError(null)
-      
+
       // Close any open swipe-to-delete buttons first
-      closeOpenSwipe()
-      
+      setOpenSwipeTaskId(null)
+
       // Check if the task will actually change position
       const currentTasks = [...tasks]
       const currentTask = currentTasks.find(t => t.id === taskId)
       if (!currentTask) return
-      
+
       // Simulate the new order to check if position will change
       const updatedTasks = currentTasks.map(task =>
         task.id === taskId ? { ...task, completed: !completed } : task
       )
-      
+
       const activeTasks = updatedTasks.filter(t => !t.completed)
       const completedTasks = updatedTasks.filter(t => t.completed)
-      
+
       let newOrder: Task[]
       if (!completed) {
         // Task is being completed - move to top of completed section
@@ -138,16 +127,16 @@ function App() {
           ...completedTasks
         ]
       }
-      
+
       // Check if position actually changed
       const currentIndex = currentTasks.findIndex(t => t.id === taskId)
       const newIndex = newOrder.findIndex(t => t.id === taskId)
       const positionChanged = currentIndex !== newIndex
-      
+
       if (positionChanged) {
         // Start the move-out animation
         setMovingTasks(prev => new Set(prev).add(taskId))
-        
+
         // Wait for animation to complete, then update and reorder
         setTimeout(() => {
           void (async () => {
@@ -156,7 +145,7 @@ function App() {
 
               // Update the task completion status and reorder
               setTasks(newOrder)
-          
+
               // End the move animation after a brief delay to allow for re-render
               setTimeout(() => {
                 setMovingTasks(prev => {
@@ -186,7 +175,7 @@ function App() {
           )
         )
       }
-      
+
     } catch (err) {
       console.error('Error updating task:', err)
       setFriendlyError(err, 'Failed to update task. Please try again.')
@@ -202,19 +191,19 @@ function App() {
   /**
    * Handles deleting a task from the list
    * Includes smooth deletion animation before removing from state
-   * 
+   *
    * @param taskId - The ID of the task to delete
    */
   const handleDeleteTask = async (taskId: string) => {
     try {
       setError(null)
-      
+
       // Close any open swipe-to-delete buttons first
-      closeOpenSwipe()
-      
+      setOpenSwipeTaskId(null)
+
       // Start the deletion animation
       setDeletingTasks(prev => new Set(prev).add(taskId))
-      
+
       // Wait for animation to complete
       setTimeout(() => {
         void (async () => {
@@ -227,9 +216,6 @@ function App() {
               newSet.delete(taskId)
               return newSet
             })
-        
-            // Clear the open element reference when a task is deleted
-            setOpenElementRef(null)
           } catch (err) {
             console.error('Error deleting task:', err)
             setFriendlyError(err, 'Failed to delete task. Please try again.')
@@ -241,7 +227,7 @@ function App() {
           }
         })()
       }, ANIMATION.DELETE_DURATION) // Match the CSS animation duration
-      
+
     } catch (err) {
       console.error('Error deleting task:', err)
       setFriendlyError(err, 'Failed to delete task. Please try again.')
@@ -256,29 +242,22 @@ function App() {
 
   /**
    * Handles opening a swipe-to-delete action
-   * Ensures only one delete button is visible at a time by closing others
-   * 
-   * @param elementRef - Reference to the element that was swiped
+   * Ensures only one delete button is visible at a time
+   *
+   * @param taskId - The ID of the task that was swiped
    */
-  const handleSwipeOpen = (elementRef: React.RefObject<HTMLDivElement | null>) => {
-    // Close the previously open element
-    if (openElementRef && openElementRef.current && openElementRef !== elementRef) {
-      openElementRef.current.classList.remove('swiped')
-      const taskContent = openElementRef.current.querySelector('.task-content') as HTMLElement
-      if (taskContent) {
-        taskContent.style.transform = 'translateX(0)'
-      }
-    }
-    // Set the new open element (only if it has a current element)
-    if (elementRef.current) {
-      setOpenElementRef(elementRef)
-    }
+  const handleSwipeOpen = (taskId: string) => {
+    setOpenSwipeTaskId(taskId)
+  }
+
+  const handleSwipeClose = () => {
+    setOpenSwipeTaskId(null)
   }
 
   /**
    * Reorders tasks to show active tasks first, then completed tasks
    * This provides a better user experience by prioritizing actionable items
-   * 
+   *
    * @param tasks - Array of tasks to reorder
    * @returns Reordered array with active tasks first, then completed tasks
    */
@@ -301,24 +280,24 @@ function App() {
               CraftAmplify Tasks
             </h1>
           </div>
-          
+
           {error && (
             <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
               {error}
             </div>
           )}
-          
+
           {/* Input Section */}
           <div className="pb-4">
             <AddTaskForm onAddTask={handleAddTask} />
           </div>
-          
+
           {/* Tasks Section */}
       <div>
             <h2>
               Tasks
             </h2>
-            
+
             {/* Tasks List */}
             <div className="space-y-2">
               {loading ? (
@@ -330,11 +309,13 @@ function App() {
               ) : (
                 orderedTasks.map((task, index) => (
                   <div key={task.id}>
-                    <TaskItem 
-                      task={task} 
-                      onToggle={handleToggleTask} 
-                      onDelete={handleDeleteTask} 
+                    <TaskItem
+                      task={task}
+                      onToggle={handleToggleTask}
+                      onDelete={handleDeleteTask}
                       onSwipeOpen={handleSwipeOpen}
+                      onSwipeClose={handleSwipeClose}
+                      isSwipeOpen={openSwipeTaskId === task.id}
                       isDeleting={deletingTasks.has(task.id)}
                       isMoving={movingTasks.has(task.id)}
                     />
@@ -347,9 +328,9 @@ function App() {
             </div>
           </div>
         </div>
-        
+
         {/* Footer Image */}
-        <div 
+        <div
           className="w-full"
           style={{
             backgroundImage: "url('/footer-image.png')",

@@ -7,8 +7,6 @@
 export const API_CONFIG = {
   /** Base URL for the JSON Server API */
   BASE_URL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000',
-  /** Default timeout for API requests in milliseconds */
-  TIMEOUT: 5000,
 } as const
 
 /** Animation and Timing Constants */
@@ -57,10 +55,4 @@ export const ERROR_MESSAGES = {
 export const LOADING_MESSAGES = {
   /** Message displayed while tasks are being fetched */
   LOADING_TASKS: 'Loading tasks...',
-  /** Message displayed while a task is being added */
-  ADDING_TASK: 'Adding task...',
-  /** Message displayed while a task is being updated */
-  UPDATING_TASK: 'Updating task...',
-  /** Message displayed while a task is being deleted */
-  DELETING_TASK: 'Deleting task...',
 } as const 

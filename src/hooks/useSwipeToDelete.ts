@@ -1,31 +1,38 @@
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import { SWIPE } from '@/constants'
 
 interface UseSwipeToDeleteProps {
+  taskId: string
+  isSwipeOpen: boolean
+  onSwipeOpen: (taskId: string) => void
+  onSwipeClose: () => void
   onDelete: () => void
-  onSwipeOpen: (elementRef: React.RefObject<HTMLDivElement | null>) => void
 }
 
-export function useSwipeToDelete({ onDelete, onSwipeOpen }: UseSwipeToDeleteProps) {
+export function useSwipeToDelete({
+  taskId,
+  isSwipeOpen,
+  onSwipeOpen,
+  onSwipeClose,
+  onDelete
+}: UseSwipeToDeleteProps) {
   const elementRef = useRef<HTMLDivElement>(null)
   const startXRef = useRef<number>(0)
   const currentXRef = useRef<number>(0)
   const isSwipingRef = useRef<boolean>(false)
+  const [swipeOffset, setSwipeOffset] = useState(0)
 
-  const hideDeleteButton = useCallback(() => {
-    if (elementRef.current?.classList.contains('swiped')) {
-      elementRef.current.classList.remove('swiped')
-      const taskContent = elementRef.current.querySelector('.task-content') as HTMLElement
-      if (taskContent) {
-        taskContent.style.transform = 'translateX(0)'
-      }
-    }
-  }, [])
-
+  // Close the revealed action when the user clicks elsewhere.
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
-      if (elementRef.current && !elementRef.current.contains(e.target as Node)) {
-        hideDeleteButton()
+      if (
+        elementRef.current &&
+        !elementRef.current.contains(e.target as Node)
+      ) {
+        if (isSwipeOpen) {
+          onSwipeClose()
+        }
+        setSwipeOffset(0)
       }
     }
 
@@ -33,84 +40,66 @@ export function useSwipeToDelete({ onDelete, onSwipeOpen }: UseSwipeToDeleteProp
     return () => {
       document.removeEventListener('click', handleGlobalClick)
     }
-  }, [hideDeleteButton])
+  }, [isSwipeOpen, onSwipeClose])
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX
+    currentXRef.current = e.touches[0].clientX
     isSwipingRef.current = false
   }, [])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isSwipingRef.current) {
-      currentXRef.current = e.touches[0].clientX
-      const diffX = startXRef.current - currentXRef.current
-      
-      if (diffX > 0) {
-        isSwipingRef.current = true
-        const translateX = Math.min(diffX, SWIPE.MAX_DISTANCE)
-        if (elementRef.current) {
-          const taskContent = elementRef.current.querySelector('.task-content') as HTMLElement
-          if (taskContent) {
-            taskContent.style.transform = `translateX(-${translateX}px)`
-          }
-        }
-      }
-    } else {
-      currentXRef.current = e.touches[0].clientX
-      const diffX = startXRef.current - currentXRef.current
-      const translateX = Math.min(diffX, SWIPE.MAX_DISTANCE)
-      if (elementRef.current) {
-        const taskContent = elementRef.current.querySelector('.task-content') as HTMLElement
-        if (taskContent) {
-          taskContent.style.transform = `translateX(-${translateX}px)`
-        }
-      }
+    currentXRef.current = e.touches[0].clientX
+    const diffX = startXRef.current - currentXRef.current
+
+    if (diffX > 0) {
+      isSwipingRef.current = true
+      setSwipeOffset(Math.min(diffX, SWIPE.MAX_DISTANCE))
     }
   }, [])
 
   const handleTouchEnd = useCallback(() => {
     const diffX = startXRef.current - currentXRef.current
-    
+
     if (diffX > SWIPE.THRESHOLD) {
-      if (elementRef.current) {
-        onSwipeOpen(elementRef)
-        
-        elementRef.current.classList.add('swiped')
-        const taskContent = elementRef.current.querySelector('.task-content') as HTMLElement
-        if (taskContent) {
-          taskContent.style.transform = `translateX(-${SWIPE.MAX_DISTANCE}px)`
-        }
-      }
+      setSwipeOffset(0)
+      onSwipeOpen(taskId)
     } else {
-      if (elementRef.current) {
-        elementRef.current.classList.remove('swiped')
-        const taskContent = elementRef.current.querySelector('.task-content') as HTMLElement
-        if (taskContent) {
-          taskContent.style.transform = 'translateX(0)'
-        }
+      setSwipeOffset(0)
+      if (isSwipeOpen) {
+        onSwipeClose()
       }
     }
-    
+
     isSwipingRef.current = false
-  }, [onSwipeOpen])
+  }, [taskId, isSwipeOpen, onSwipeOpen, onSwipeClose])
 
-  const handleTaskClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    hideDeleteButton()
-  }, [hideDeleteButton])
+  const handleTaskClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (isSwipeOpen) {
+        onSwipeClose()
+      }
+      setSwipeOffset(0)
+    },
+    [isSwipeOpen, onSwipeClose]
+  )
 
-  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onDelete()
-  }, [onDelete])
+  const handleDeleteClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onDelete()
+    },
+    [onDelete]
+  )
 
   return {
     elementRef,
+    swipeOffset,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
     handleTaskClick,
-    handleDeleteClick,
-    hideDeleteButton
+    handleDeleteClick
   }
-} 
+}
