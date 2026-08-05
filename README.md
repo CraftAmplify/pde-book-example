@@ -38,12 +38,11 @@ This project is designed to simulate a modern frontend development environment w
 
 ### Prerequisites
 
-- **Node.js** (v24.0.0 or higher) with npm
-  - Optional: use `nvm` for Node.js version management (not required)
+- **Node.js 24+** with npm — run `nvm install` (uses `.nvmrc`) or install from [nodejs.org](https://nodejs.org)
 
 Check your Node version:
 ```bash
-node -v  # should be >= 24.0.0
+node -v  # should be v24.x or higher
 ```
 
 ### Known Good Setup
@@ -70,7 +69,7 @@ The app expects the mock API and frontend development server to run at the same 
    
    `npm ci` is recommended because it installs **exactly** what's in `package-lock.json` for a consistent, reproducible setup (great for classrooms and CI).
 
-   **Install output you can ignore:** `deprecated` warnings for `inflight` or `glob` from test tooling. They look alarming but are common and do not block the exercises. This repo also sets `fund=false` in `.npmrc` so `npm fund` lines stay hidden during install.
+   **Quieter installs:** This repo sets `fund=false` and `loglevel=error` in `.npmrc`, so common noise such as `npm fund` lines and transitive `deprecated` warnings stays hidden during install.
 
    **Install output worth acting on:** `npm audit` reporting moderate or higher vulnerabilities, or Playwright asking you to run `npx playwright install` (a fresh `npm ci` in this template should install Chromium automatically via `postinstall`).
 
