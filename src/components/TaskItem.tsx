@@ -34,7 +34,6 @@ export function TaskItem({
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    onToggle(task.id, task.completed)
   }
 
   const handleHoverDeleteClick = (e: React.MouseEvent) => {
